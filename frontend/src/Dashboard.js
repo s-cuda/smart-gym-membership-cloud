@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Dashboard.css';
 
+// API Configuration
+const API_BASE_URL = '/api';
 
 function Dashboard({ memberId = 1 }) {
   const [member, setMember] = useState(null);
@@ -17,9 +19,10 @@ function Dashboard({ memberId = 1 }) {
     fetchMemberData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId]);
+
   const fetchMemberData = async () => {
     try {
-      const response = await fetch(`http://172.176.96.72:8000/members/${memberId}`);
+      const response = await fetch(`${API_BASE_URL}/members/${memberId}`);
       const data = await response.json();
       setMember(data);
       setLoading(false);
@@ -32,7 +35,7 @@ function Dashboard({ memberId = 1 }) {
   const handleGenerateRecommendations = async () => {
     setLoadingRecommendations(true);
     try {
-      const response = await fetch(`http://172.176.96.72:8000/members/${memberId}/recommendations?top_n=5`);
+      const response = await fetch(`${API_BASE_URL}/members/${memberId}/recommendations?top_n=5`);
       const data = await response.json();
       setRecommendations(data.recommendations || []);
       setShowRecommendations(true);
@@ -46,7 +49,7 @@ function Dashboard({ memberId = 1 }) {
   const handleGenerateSchedule = async () => {
     setLoadingSchedule(true);
     try {
-      const response = await fetch(`http://172.176.96.72:8000/members/${memberId}/weekly-schedule`);
+      const response = await fetch(`${API_BASE_URL}/members/${memberId}/weekly-schedule`);
       const data = await response.json();
       setWeeklySchedule(data.weekly_schedule || {});
       setShowSchedule(true);

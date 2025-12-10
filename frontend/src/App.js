@@ -4,6 +4,9 @@ import Login from './Login';
 import Dashboard from './Dashboard';
 import Billing from './Billing';
 
+// API Configuration - UPDATE THIS
+export const API_BASE_URL = '/api';  // Changed from 'http://172.176.96.72:8000'
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [memberId, setMemberId] = useState(null);

@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
+// API Configuration
+const API_BASE_URL = '/api';
+
 function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +20,7 @@ function Login({ onLogin }) {
     }
 
     try {
-      const response = await fetch('http://172.176.96.72:8000/members/');
+      const response = await fetch(`${API_BASE_URL}/members/`);
       const members = await response.json();
       
       const member = members.find(m => m.email.toLowerCase() === email.toLowerCase());

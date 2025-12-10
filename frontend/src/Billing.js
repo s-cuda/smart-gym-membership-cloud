@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Billing.css';
 
+// API Configuration
+const API_BASE_URL = '/api';
+
 function Billing({ memberId = 1 }) {
   const [member, setMember] = useState(null);
   const [billing, setBilling] = useState([]);
@@ -12,11 +15,12 @@ function Billing({ memberId = 1 }) {
     fetchMemberData();
     fetchBillingData();
     fetchPlans();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId]);
+
   const fetchMemberData = async () => {
     try {
-      const response = await fetch(`http://172.176.96.72:8000/members/${memberId}`);
+      const response = await fetch(`${API_BASE_URL}/members/${memberId}`);
       const data = await response.json();
       setMember(data);
     } catch (error) {
@@ -26,7 +30,7 @@ function Billing({ memberId = 1 }) {
 
   const fetchBillingData = async () => {
     try {
-      const response = await fetch(`http://172.176.96.72:8000/members/${memberId}/billing`);
+      const response = await fetch(`${API_BASE_URL}/members/${memberId}/billing`);
       const data = await response.json();
       setBilling(data);
       setLoading(false);
@@ -38,7 +42,7 @@ function Billing({ memberId = 1 }) {
 
   const fetchPlans = async () => {
     try {
-      const response = await fetch(`http://172.176.96.72:8000/membership-plans/`);
+      const response = await fetch(`${API_BASE_URL}/membership-plans/`);
       const data = await response.json();
       setPlans(data);
     } catch (error) {
