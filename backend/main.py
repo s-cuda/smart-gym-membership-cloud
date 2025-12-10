@@ -270,6 +270,39 @@ def get_membership_plans(db: Session = Depends(models.get_db)):
 # ADMIN DASHBOARD ENDPOINTS
 # ============================================
 
+@app.post("/billing/")
+def create_billing(
+    member_id: int,
+    billing_date: str,
+    amount: float,
+    payment_status: str = "Pending",
+    payment_method: str = "Auto-pay",
+    next_billing_date: str = None,
+    db: Session = Depends(models.get_db)
+):
+    """Create new billing record"""
+    member = db.query(models.Member).filter(models.Member.member_id == member_id).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    
+    billing_date_obj = datetime.strptime(billing_date, "%Y-%m-%d").date()
+    next_billing_date_obj = datetime.strptime(next_billing_date, "%Y-%m-%d").date() if next_billing_date else None
+    
+    new_billing = models.Billing(
+        member_id=member_id,
+        billing_date=billing_date_obj,
+        amount=amount,
+        payment_status=payment_status,
+        payment_method=payment_method,
+        next_billing_date=next_billing_date_obj
+    )
+    
+    db.add(new_billing)
+    db.commit()
+    db.refresh(new_billing)
+    
+    return {"message": "Billing created successfully", "billing": new_billing}
+
 @app.get("/admin/stats")
 def get_admin_stats(db: Session = Depends(models.get_db)):
     """Get comprehensive admin dashboard statistics"""
@@ -304,54 +337,96 @@ def get_admin_stats(db: Session = Depends(models.get_db)):
         models.Billing.payment_status == "Pending"
     ).scalar() or 0
     
-    # Popular classes
-    try:
-        popular_classes = db.query(
-            models.Class.class_name,
-            func.count(models.ClassRegistration.registration_id).label('bookings')
-        ).join(
-            models.ClassSchedule, 
-            models.Class.class_id == models.ClassSchedule.class_id
-        ).join(
-            models.ClassRegistration, 
-            models.ClassSchedule.schedule_id == models.ClassRegistration.schedule_id
-        ).group_by(
-            models.Class.class_name
-        ).order_by(
-            func.count(models.ClassRegistration.registration_id).desc()
-        ).limit(5).all()
-        
-        popular_classes_data = [{"name": c[0], "bookings": c[1]} for c in popular_classes]
-    except:
-        popular_classes_data = []
-    
-    # Recent activity
-    try:
-        recent_registrations = db.query(
-            models.Member.first_name,
-            models.Member.last_name,
-            models.ClassRegistration.registration_date
-        ).join(
-            models.ClassRegistration, 
-            models.Member.member_id == models.ClassRegistration.member_id
-        ).order_by(
-            models.ClassRegistration.registration_date.desc()
-        ).limit(10).all()
-        
-        recent_activity = [{
-            "icon": "🆕",
-            "title": f"{r[0]} {r[1]} registered",
-            "description": "New class registration",
-            "time": r[2].strftime("%Y-%m-%d") if r[2] else "N/A"
-        } for r in recent_registrations]
-    except:
-        recent_activity = []
-    
     # Total classes
     total_classes = db.query(models.Class).count()
     
-    # Average attendance (placeholder)
+    # Average attendance
     avg_attendance = 75
+    
+    # Popular classes - SIMPLIFIED (aggregate by schedule_id first)
+    popular_classes_data = []
+    try:
+        # Get registration counts by schedule_id
+        popular_schedules = db.query(
+            models.ClassRegistration.schedule_id,
+            func.count(models.ClassRegistration.registration_id).label('count')
+        ).group_by(
+            models.ClassRegistration.schedule_id
+        ).order_by(
+            func.count(models.ClassRegistration.registration_id).desc()
+        ).limit(10).all()
+        
+        # For each popular schedule, get the class name
+        class_bookings = {}
+        for sched_id, count in popular_schedules:
+            schedule = db.query(models.ClassSchedule).filter(
+                models.ClassSchedule.schedule_id == sched_id
+            ).first()
+            
+            if schedule:
+                class_obj = db.query(models.Class).filter(
+                    models.Class.class_id == schedule.class_id
+                ).first()
+                
+                if class_obj:
+                    class_name = class_obj.class_name
+                    if class_name in class_bookings:
+                        class_bookings[class_name] += count
+                    else:
+                        class_bookings[class_name] = count
+        
+        # Convert to list and sort
+        popular_classes_data = [
+            {"name": name, "bookings": bookings} 
+            for name, bookings in sorted(class_bookings.items(), key=lambda x: x[1], reverse=True)[:5]
+        ]
+        
+    except Exception as e:
+        print(f"Error in popular_classes: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        popular_classes_data = []
+    
+    # Recent activity - SIMPLIFIED
+    recent_activity = []
+    try:
+        # Get recent registrations
+        recent_regs = db.query(models.ClassRegistration).order_by(
+            models.ClassRegistration.registration_date.desc()
+        ).limit(10).all()
+        
+        for reg in recent_regs:
+            # Get member info
+            member = db.query(models.Member).filter(
+                models.Member.member_id == reg.member_id
+            ).first()
+            
+            # Get schedule info
+            schedule = db.query(models.ClassSchedule).filter(
+                models.ClassSchedule.schedule_id == reg.schedule_id
+            ).first()
+            
+            # Get class info
+            class_obj = None
+            if schedule:
+                class_obj = db.query(models.Class).filter(
+                    models.Class.class_id == schedule.class_id
+                ).first()
+            
+            if member:
+                activity = {
+                    "icon": "🆕",
+                    "title": f"{member.first_name} {member.last_name} registered",
+                    "description": f"Registered for {class_obj.class_name}" if class_obj else "New class registration",
+                    "time": reg.registration_date.strftime("%b %d, %Y") if reg.registration_date else "Recently"
+                }
+                recent_activity.append(activity)
+        
+    except Exception as e:
+        print(f"Error in recent_activity: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        recent_activity = []
     
     return {
         "total_members": total_members,
@@ -365,7 +440,6 @@ def get_admin_stats(db: Session = Depends(models.get_db)):
         "popular_classes": popular_classes_data,
         "recent_activity": recent_activity
     }
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

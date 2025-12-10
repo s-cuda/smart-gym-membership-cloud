@@ -58,34 +58,34 @@ function Admin() {
     { name: 'Inactive', value: (stats?.total_members || 0) - (stats?.active_members || 0), color: '#95a5a6' }
   ];
 
-  // Azure Functions status - Updated!
+  // Azure Functions status - UPDATED: Billing is Deployed, others are Planned
   const azureFunctions = [
     { 
       name: 'Monthly Billing Generator', 
-      status: 'Deployed', 
+      status: 'Deployed',
       icon: '💰',
-      description: 'Generates monthly billing for all active members',
-      schedule: '1st of every month at midnight',
+      description: 'Automatically generates monthly billing for all active members',
+      schedule: '1st of every month at 12:00 AM',
       lastRun: 'Dec 10, 2025',
       nextRun: 'Jan 1, 2026'
     },
     { 
       name: 'Daily Stats Aggregator', 
-      status: 'Planned', 
+      status: 'Planned',
       icon: '📊',
       description: 'Calculates and caches daily statistics for faster dashboard loading',
       schedule: 'Daily at midnight'
     },
     { 
       name: 'Membership Expiration Alerts', 
-      status: 'Planned', 
+      status: 'Planned',
       icon: '⚠️',
-      description: 'Sends alerts for memberships expiring in 7 days',
-      schedule: 'Weekly on Mondays'
+      description: 'Sends email alerts for memberships expiring within 7 days',
+      schedule: 'Weekly on Mondays at 9:00 AM'
     },
     { 
       name: 'Class Capacity Monitor', 
-      status: 'Planned', 
+      status: 'Planned',
       icon: '👥',
       description: 'Monitors class capacities and sends alerts for under-utilized classes',
       schedule: 'Hourly'
@@ -228,18 +228,24 @@ function Admin() {
         {/* Popular Classes Bar Chart */}
         <div className="chart-card full-width">
           <h2>Most Popular Classes</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={stats?.popular_classes || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#34495e" />
-              <XAxis dataKey="name" stroke="#ecf0f1" />
-              <YAxis stroke="#ecf0f1" />
-              <Tooltip 
-                contentStyle={{ backgroundColor: '#2c3e50', border: '1px solid #34495e' }}
-                labelStyle={{ color: '#ecf0f1' }}
-              />
-              <Bar dataKey="bookings" fill="#e74c3c" />
-            </BarChart>
-          </ResponsiveContainer>
+          {stats?.popular_classes && stats.popular_classes.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.popular_classes}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#34495e" />
+                <XAxis dataKey="name" stroke="#ecf0f1" />
+                <YAxis stroke="#ecf0f1" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#2c3e50', border: '1px solid #34495e' }}
+                  labelStyle={{ color: '#ecf0f1' }}
+                />
+                <Bar dataKey="bookings" fill="#e74c3c" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p style={{color: '#95a5a6', textAlign: 'center', padding: '2rem'}}>
+              No class booking data available
+            </p>
+          )}
         </div>
 
         {/* Azure Functions Status */}
@@ -268,14 +274,37 @@ function Admin() {
                 {func.status === 'Deployed' && (
                   <div className="function-execution">
                     <div className="execution-info">
-                      <span>Last Run: {func.lastRun}</span>
-                      <span>Next Run: {func.nextRun}</span>
+                      <span>✓ Last Run: {func.lastRun}</span>
+                      <span>→ Next Run: {func.nextRun}</span>
                     </div>
                   </div>
                 )}
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="section-card">
+          <h2>Recent Activity</h2>
+          {stats?.recent_activity && stats.recent_activity.length > 0 ? (
+            <div className="activity-list">
+              {stats.recent_activity.map((activity, index) => (
+                <div className="activity-item" key={index}>
+                  <div className="activity-icon">{activity.icon}</div>
+                  <div className="activity-details">
+                    <strong>{activity.title}</strong>
+                    <small>{activity.description}</small>
+                  </div>
+                  <div className="activity-time">{activity.time}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{color: '#95a5a6', textAlign: 'center', padding: '2rem'}}>
+              No recent activity found
+            </p>
+          )}
         </div>
       </div>
     </div>
