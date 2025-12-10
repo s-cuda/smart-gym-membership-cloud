@@ -29,6 +29,8 @@ def init_database():
         ("Pilates", "Emma Davis", 50, 18, "Beginner", "Standard", "Core strengthening and flexibility"),
         ("Zumba", "Maria Garcia", 50, 30, "Beginner", "Standard", "Fun Latin-inspired dance workout"),
         ("Stretching", "Lisa Anderson", 30, 25, "Beginner", "Standard", "Gentle stretching and mobility"),
+        ("Tai Chi", "Master Zhang Wei", 45, 20, "Beginner", "Standard", "Ancient Chinese martial art promoting balance and inner peace"),
+        ("Cardio Kickboxing", "Jessica Martinez", 50, 22, "Beginner", "Standard", "High-energy martial arts inspired cardio workout"),
         ("HIIT", "Chris Brown", 45, 20, "Intermediate", "Premium", "High intensity interval training"),
         ("CrossFit", "John Smith", 60, 15, "Advanced", "Premium", "Intense functional fitness training"),
         ("Boxing", "Tom Wilson", 60, 12, "Advanced", "Premium", "Technical boxing and conditioning"),
@@ -76,37 +78,77 @@ def init_database():
             schedules.append(schedule)
     db.add_all(schedules)
     
-    first_names = ["John", "Jane", "Mike", "Sarah", "Chris", "Emma", "David", "Lisa", "Tom", "Amy",
-                   "Kevin", "Rachel", "Steve", "Nicole", "Brian", "Jessica", "Mark", "Lauren", "Dan", "Megan"]
+    first_names_male = ["John", "Mike", "Chris", "David", "Tom", "Kevin", "Steve", "Brian", "Mark", "Dan",
+                        "James", "Robert", "Michael", "William", "Richard", "Joseph", "Thomas", "Charles", "Daniel", "Matthew"]
+    first_names_female = ["Jane", "Sarah", "Emma", "Lisa", "Amy", "Rachel", "Nicole", "Jessica", "Lauren", "Megan",
+                          "Emily", "Michelle", "Ashley", "Jennifer", "Amanda", "Stephanie", "Rebecca", "Laura", "Maria", "Anna"]
     last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Wilson", "Moore",
-                  "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson", "Martinez", "Robinson"]
+                  "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson", "Martinez", "Robinson",
+                  "Clark", "Rodriguez", "Lewis", "Lee", "Walker", "Hall", "Allen", "Young", "King", "Wright"]
+    
     membership_levels = ["Standard", "Premium", "Platinum"]
     time_slots = ["Morning", "Afternoon", "Evening"]
     
+    day_combinations = [
+        "Monday,Wednesday,Friday",
+        "Tuesday,Thursday",
+        "Monday,Wednesday",
+        "Tuesday,Thursday,Saturday",
+        "Monday,Friday",
+        "Wednesday,Friday",
+        "Saturday,Sunday",
+        "Monday,Tuesday,Wednesday",
+        "Thursday,Friday,Saturday"
+    ]
+    
     members = []
-    genders = ["Male", "Female"]
-    for i in range(50):
-        gender = random.choice(genders)
-        birth_year = random.randint(1970, 2000)
+    for i in range(300):
+        gender = random.choice(["Male", "Female"])
+        
+        birth_year = random.randint(1960, 2005)
         age = 2025 - birth_year
         
         if gender == "Male":
-            height = random.randint(165, 195)
-            weight = random.randint(65, 105)
+            first_name = random.choice(first_names_male)
+            if age < 25:
+                height = random.randint(170, 190)
+                weight = random.randint(65, 90)
+            elif age < 40:
+                height = random.randint(168, 188)
+                weight = random.randint(70, 100)
+            elif age < 55:
+                height = random.randint(165, 185)
+                weight = random.randint(75, 105)
+            else:
+                height = random.randint(163, 180)
+                weight = random.randint(70, 100)
         else:
-            height = random.randint(155, 180)
-            weight = random.randint(50, 85)
+            first_name = random.choice(first_names_female)
+            if age < 25:
+                height = random.randint(158, 175)
+                weight = random.randint(50, 70)
+            elif age < 40:
+                height = random.randint(155, 173)
+                weight = random.randint(52, 75)
+            elif age < 55:
+                height = random.randint(153, 170)
+                weight = random.randint(55, 80)
+            else:
+                height = random.randint(150, 168)
+                weight = random.randint(55, 78)
+        
+        membership = random.choice(membership_levels)
         
         member = Member(
-            first_name=random.choice(first_names),
+            first_name=first_name,
             last_name=random.choice(last_names),
             email=f"member{i+1}@gym.com",
             phone=f"555-{random.randint(1000, 9999)}",
             date_of_birth=date(birth_year, random.randint(1, 12), random.randint(1, 28)),
-            membership_level=random.choice(membership_levels),
-            join_date=datetime.now() - timedelta(days=random.randint(0, 365)),
+            membership_level=membership,
+            join_date=datetime.now() - timedelta(days=random.randint(0, 730)),
             membership_status="Active",
-            preferred_days="Monday,Wednesday,Friday",
+            preferred_days=random.choice(day_combinations),
             preferred_time_slot=random.choice(time_slots),
             height_cm=height,
             weight_kg=weight,
@@ -126,13 +168,13 @@ def init_database():
             member_id=member.member_id,
             billing_date=date.today(),
             amount=plan.monthly_fee,
-            payment_status=random.choice(["Paid", "Pending", "Paid", "Paid"]),
+            payment_status=random.choice(["Paid", "Paid", "Paid", "Pending"]),
             payment_method="Credit Card",
             next_billing_date=date.today() + timedelta(days=30)
         )
         db.add(billing)
     
-    for _ in range(100):
+    for _ in range(500):
         member = random.choice(members)
         schedule = random.choice(schedules)
         
@@ -145,18 +187,19 @@ def init_database():
             registration = ClassRegistration(
                 member_id=member.member_id,
                 schedule_id=schedule.schedule_id,
-                registration_date=datetime.now() - timedelta(days=random.randint(0, 30)),
-                attendance_status=random.choice(["Attended", "Registered", "Attended", "Attended"])
+                registration_date=datetime.now() - timedelta(days=random.randint(0, 60)),
+                attendance_status=random.choice(["Attended", "Attended", "Attended", "Registered"])
             )
             db.add(registration)
     
     db.commit()
     print(f"✅ Database initialized with:")
     print(f"   - {len(members)} members")
-    print(f"   - {len(classes)} class types")
+    print(f"   - {len(classes)} class types (7 Standard, 3 Premium, 3 Platinum)")
     print(f"   - {len(schedules)} scheduled sessions")
     print(f"   - 3 membership plans")
-    print(f"   - Sample billing and registration data")
+    print(f"   - ~500 class registrations")
+    print(f"   - Sample billing data")
     db.close()
 
 if __name__ == "__main__":
