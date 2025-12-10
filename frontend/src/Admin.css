@@ -361,3 +361,33 @@
   font-size: 1.5rem;
   color: #ecf0f1;
 }
+
+.function-status.deployed {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+}
+
+.function-status.planned {
+  background: rgba(149, 165, 166, 0.2);
+  color: #95a5a6;
+}
+
+.function-execution {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(52, 152, 219, 0.2);
+}
+
+.execution-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #95a5a6;
+}
+
+.execution-info span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

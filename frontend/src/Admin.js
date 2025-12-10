@@ -58,39 +58,37 @@ function Admin() {
     { name: 'Inactive', value: (stats?.total_members || 0) - (stats?.active_members || 0), color: '#95a5a6' }
   ];
 
-  // Azure Functions status
+  // Azure Functions status - Updated!
   const azureFunctions = [
     { 
       name: 'Monthly Billing Generator', 
-      status: 'Not Deployed', 
+      status: 'Deployed', 
       icon: '💰',
       description: 'Generates monthly billing for all active members',
-      schedule: '1st of every month',
-      action: 'Deploy Now'
+      schedule: '1st of every month at midnight',
+      lastRun: 'Dec 10, 2025',
+      nextRun: 'Jan 1, 2026'
     },
     { 
       name: 'Daily Stats Aggregator', 
-      status: 'Not Deployed', 
+      status: 'Planned', 
       icon: '📊',
-      description: 'Calculates and caches daily statistics',
-      schedule: 'Daily at midnight',
-      action: 'Deploy Now'
+      description: 'Calculates and caches daily statistics for faster dashboard loading',
+      schedule: 'Daily at midnight'
     },
     { 
       name: 'Membership Expiration Alerts', 
-      status: 'Not Deployed', 
+      status: 'Planned', 
       icon: '⚠️',
       description: 'Sends alerts for memberships expiring in 7 days',
-      schedule: 'Weekly on Mondays',
-      action: 'Deploy Now'
+      schedule: 'Weekly on Mondays'
     },
     { 
       name: 'Class Capacity Monitor', 
-      status: 'Not Deployed', 
+      status: 'Planned', 
       icon: '👥',
-      description: 'Monitors class capacities and sends alerts',
-      schedule: 'Hourly',
-      action: 'Deploy Now'
+      description: 'Monitors class capacities and sends alerts for under-utilized classes',
+      schedule: 'Hourly'
     }
   ];
 
@@ -248,7 +246,7 @@ function Admin() {
         <div className="section-card">
           <div className="section-header">
             <h2>⚡ Azure Functions Status</h2>
-            <p className="section-subtitle">Automated background tasks</p>
+            <p className="section-subtitle">Automated background tasks and serverless computing</p>
           </div>
           <div className="functions-grid">
             {azureFunctions.map((func, index) => (
@@ -257,7 +255,7 @@ function Admin() {
                   <span className="function-icon">{func.icon}</span>
                   <div className="function-info">
                     <h3>{func.name}</h3>
-                    <span className={`function-status ${func.status === 'Active' ? 'active' : 'inactive'}`}>
+                    <span className={`function-status ${func.status === 'Deployed' ? 'deployed' : 'planned'}`}>
                       {func.status}
                     </span>
                   </div>
@@ -267,26 +265,14 @@ function Admin() {
                   <span className="schedule-icon">⏰</span>
                   <span>{func.schedule}</span>
                 </div>
-                <button className="function-action-btn">
-                  {func.action}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="section-card">
-          <h2>Recent Activity</h2>
-          <div className="activity-list">
-            {stats?.recent_activity?.slice(0, 8).map((activity, index) => (
-              <div className="activity-item" key={index}>
-                <div className="activity-icon">{activity.icon}</div>
-                <div className="activity-details">
-                  <strong>{activity.title}</strong>
-                  <small>{activity.description}</small>
-                </div>
-                <div className="activity-time">{activity.time}</div>
+                {func.status === 'Deployed' && (
+                  <div className="function-execution">
+                    <div className="execution-info">
+                      <span>Last Run: {func.lastRun}</span>
+                      <span>Next Run: {func.nextRun}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
