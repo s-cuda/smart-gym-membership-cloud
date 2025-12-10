@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
-
-// API Configuration
-const API_BASE_URL = '/api';
+import { API_BASE_URL } from './config';
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState('');

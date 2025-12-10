@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Billing.css';
-
-// API Configuration
-const API_BASE_URL = '/api';
+import { API_BASE_URL } from './config';
 
 function Billing({ memberId = 1 }) {
   const [member, setMember] = useState(null);
