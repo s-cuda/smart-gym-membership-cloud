@@ -1,16 +1,18 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List
 import models
 from ai_recommender import GymRecommender
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 app = FastAPI(
     title="Smart Gym Membership API",
     description="AI-powered gym management system with personalized class recommendations",
     version="1.0.0"
 )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,6 +20,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Create tables
 models.Base.metadata.create_all(bind=models.engine)
 
@@ -262,6 +265,106 @@ def get_membership_plans(db: Session = Depends(models.get_db)):
     """Get all membership plan options"""
     plans = db.query(models.MembershipPlan).all()
     return plans
+
+# ============================================
+# ADMIN DASHBOARD ENDPOINTS
+# ============================================
+
+@app.get("/admin/stats")
+def get_admin_stats(db: Session = Depends(models.get_db)):
+    """Get comprehensive admin dashboard statistics"""
+    
+    # Total members
+    total_members = db.query(models.Member).count()
+    active_members = db.query(models.Member).filter(
+        models.Member.membership_status == "Active"
+    ).count()
+    
+    # New members this month
+    start_of_month = datetime.now().replace(day=1)
+    new_this_month = db.query(models.Member).filter(
+        models.Member.join_date >= start_of_month
+    ).count()
+    
+    # Membership tier distribution
+    membership_tiers = db.query(
+        models.Member.membership_level,
+        func.count(models.Member.member_id)
+    ).group_by(models.Member.membership_level).all()
+    
+    tier_data = [{"name": tier[0], "count": tier[1]} for tier in membership_tiers]
+    
+    # Revenue calculations
+    monthly_revenue = db.query(func.sum(models.Billing.amount)).filter(
+        models.Billing.billing_date >= start_of_month,
+        models.Billing.payment_status == "Paid"
+    ).scalar() or 0
+    
+    outstanding = db.query(func.sum(models.Billing.amount)).filter(
+        models.Billing.payment_status == "Pending"
+    ).scalar() or 0
+    
+    # Popular classes
+    try:
+        popular_classes = db.query(
+            models.Class.class_name,
+            func.count(models.ClassRegistration.registration_id).label('bookings')
+        ).join(
+            models.ClassSchedule, 
+            models.Class.class_id == models.ClassSchedule.class_id
+        ).join(
+            models.ClassRegistration, 
+            models.ClassSchedule.schedule_id == models.ClassRegistration.schedule_id
+        ).group_by(
+            models.Class.class_name
+        ).order_by(
+            func.count(models.ClassRegistration.registration_id).desc()
+        ).limit(5).all()
+        
+        popular_classes_data = [{"name": c[0], "bookings": c[1]} for c in popular_classes]
+    except:
+        popular_classes_data = []
+    
+    # Recent activity
+    try:
+        recent_registrations = db.query(
+            models.Member.first_name,
+            models.Member.last_name,
+            models.ClassRegistration.registration_date
+        ).join(
+            models.ClassRegistration, 
+            models.Member.member_id == models.ClassRegistration.member_id
+        ).order_by(
+            models.ClassRegistration.registration_date.desc()
+        ).limit(10).all()
+        
+        recent_activity = [{
+            "icon": "🆕",
+            "title": f"{r[0]} {r[1]} registered",
+            "description": "New class registration",
+            "time": r[2].strftime("%Y-%m-%d") if r[2] else "N/A"
+        } for r in recent_registrations]
+    except:
+        recent_activity = []
+    
+    # Total classes
+    total_classes = db.query(models.Class).count()
+    
+    # Average attendance (placeholder)
+    avg_attendance = 75
+    
+    return {
+        "total_members": total_members,
+        "active_members": active_members,
+        "new_this_month": new_this_month,
+        "monthly_revenue": float(monthly_revenue),
+        "outstanding": float(outstanding),
+        "total_classes": total_classes,
+        "avg_attendance": avg_attendance,
+        "membership_tiers": tier_data,
+        "popular_classes": popular_classes_data,
+        "recent_activity": recent_activity
+    }
 
 if __name__ == "__main__":
     import uvicorn

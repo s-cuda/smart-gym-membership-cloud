@@ -3,9 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './Login';
 import Dashboard from './Dashboard';
 import Billing from './Billing';
-
-// API Configuration - UPDATE THIS
-export const API_BASE_URL = '/api';  // Changed from 'http://172.176.96.72:8000'
+import Admin from './Admin';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -43,6 +41,8 @@ function App() {
             <Navigate to="/" />
           } 
         />
+        {/* Admin Route - No authentication for demo */}
+        <Route path="/admin" element={<Admin />} />
       </Routes>
     </Router>
   );

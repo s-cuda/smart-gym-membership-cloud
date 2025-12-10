@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './Login.css';
 import { API_BASE_URL } from './config';
 
@@ -80,6 +80,29 @@ function Login({ onLogin }) {
           <p className="demo-hint">
             Demo: Use any member email (e.g., member1@gym.com)
           </p>
+
+          {/* Admin Portal Link */}
+          <div style={{
+            textAlign: 'center', 
+            marginTop: '20px', 
+            paddingTop: '20px', 
+            borderTop: '1px solid #ddd'
+          }}>
+            <Link 
+              to="/admin" 
+              style={{
+                color: '#e74c3c',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              🔒 Admin Portal
+            </Link>
+          </div>
 
           <p className="signup-text">
             <span style={{cursor: 'pointer', borderBottom: '1px solid'}}>Sign up</span>
