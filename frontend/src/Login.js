@@ -81,7 +81,7 @@ function Login({ onLogin }) {
           </p>
 
           <p className="signup-text">
-            Don't have an account? <a href="#">Sign up</a>
+            <span style={{cursor: 'pointer', borderBottom: '1px solid'}}>Sign up</span>
           </p>
         </div>
       </div>

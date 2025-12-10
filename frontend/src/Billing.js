@@ -12,8 +12,8 @@ function Billing({ memberId = 1 }) {
     fetchMemberData();
     fetchBillingData();
     fetchPlans();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId]);
-
   const fetchMemberData = async () => {
     try {
       const response = await fetch(`http://172.176.96.72:8000/members/${memberId}`);
